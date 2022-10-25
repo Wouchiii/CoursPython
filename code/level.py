@@ -18,7 +18,9 @@ class Level:
 
         # audio
         self.coin_sound = pygame.mixer.Sound('../audio/effects/coin.wav')
+        self.coin_sound.set_volume(0.1)
         self.stomp_sound = pygame.mixer.Sound('../audio/effects/stomp.wav')
+        self.stomp_sound.set_volume(0.1)
 
         # overworld connection
         self.create_overworld = create_overworld
