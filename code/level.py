@@ -3,6 +3,7 @@ from support import import_csv_layout, import_cut_graphics
 from settings import tile_size, screen_height, screen_width
 from tiles import Tile, StaticTile, Crate, Coin, Palm
 from enemy import Enemy
+from enemy2 import Enemy2
 from decoration import Sky, Water, Clouds
 from player import Player
 from particles import ParticleEffect
@@ -10,7 +11,7 @@ from game_data import levels
 
 
 class Level:
-    def __init__(self, current_level, surface, create_overworld, change_coins, change_health):
+    def __init__(self, current_level, surface, create_overworld, change_coins, change_killCount, change_health):
         # general setup
         self.display_surface = surface
         self.world_shift = 0
@@ -36,6 +37,7 @@ class Level:
 
         # user interface
         self.change_coins = change_coins
+        self.change_killCount = change_killCount
 
         # dust
         self.dust_sprite = pygame.sprite.GroupSingle()
@@ -71,6 +73,10 @@ class Level:
         # enemy
         enemy_layout = import_csv_layout(level_data['enemies'])
         self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
+
+        # enemy2
+        enemy2_layout = import_csv_layout(level_data['enemies2'])   
+        self.enemy2_sprites = self.create_tile_group(enemy2_layout, 'enemies2')
 
         # constraint
         constraint_layout = import_csv_layout(level_data['constraints'])
@@ -118,6 +124,9 @@ class Level:
                     if type == 'enemies':
                         sprite = Enemy(tile_size, x, y)
 
+                    if type == 'enemies2':
+                        sprite = Enemy2(tile_size, x, y)
+
                     if type == 'constraint':
                         sprite = Tile(tile_size, x, y)
 
@@ -142,6 +151,11 @@ class Level:
         for enemy in self.enemy_sprites.sprites():
             if pygame.sprite.spritecollide(enemy, self.constraint_sprites, False):
                 enemy.reverse()
+
+    def enemy2_collision_reverse(self):
+        for enemy2 in self.enemy2_sprites.sprites():
+            if pygame.sprite.spritecollide(enemy2, self.constraint_sprites, False):
+                enemy2.reverse()
 
     def create_jump_particles(self, pos):
         if self.player.sprite.facing_right:
@@ -244,8 +258,34 @@ class Level:
                     explosion_sprite = ParticleEffect(enemy.rect.center, 'explosion')
                     self.explosion_sprites.add(explosion_sprite)
                     enemy.kill()
+                    self.change_killCount(1)
+
                 else:
                     self.player.sprite.get_damage()
+
+    def check_enemy2_collisions(self):
+        enemy2_collisions = pygame.sprite.spritecollide(self.player.sprite, self.enemy2_sprites, False)
+
+        if enemy2_collisions:
+            for enemy2 in enemy2_collisions:
+                enemy2_center = enemy2.rect.centery
+                enemy2_top = enemy2.rect.top
+                player_bottom = self.player.sprite.rect.bottom
+                if enemy2_top < player_bottom < enemy2_center and self.player.sprite.direction.y >= 0:
+                    self.stomp_sound.play()
+                    self.player.sprite.direction.y = -15
+                    explosion_sprite = ParticleEffect(enemy2.rect.center, 'explosion')
+                    self.explosion_sprites.add(explosion_sprite)
+                    enemy2.kill()
+                    self.change_killCount(1)
+
+                else:
+                    explosion_sprite = ParticleEffect(enemy2.rect.center, 'explosion2')
+                    self.explosion_sprites.add(explosion_sprite)
+                    enemy2.kill()
+                    self.player.sprite.get_damage2()
+                    self.player.sprite.jumpExplo()
+
 
     def run(self):
         # run the entire game / level
@@ -271,6 +311,14 @@ class Level:
         self.constraint_sprites.update(self.world_shift)
         self.enemy_collision_reverse()
         self.enemy_sprites.draw(self.display_surface)
+        self.explosion_sprites.update(self.world_shift)
+        self.explosion_sprites.draw(self.display_surface)
+
+        # enemy2
+        self.enemy2_sprites.update(self.world_shift)
+        self.constraint_sprites.update(self.world_shift)
+        self.enemy2_collision_reverse()
+        self.enemy2_sprites.draw(self.display_surface)
         self.explosion_sprites.update(self.world_shift)
         self.explosion_sprites.draw(self.display_surface)
 
@@ -308,6 +356,7 @@ class Level:
 
         self.check_coin_collisions()
         self.check_enemy_collisions()
+        self.check_enemy2_collisions()
 
         # water
         self.water.draw(self.display_surface, self.world_shift)

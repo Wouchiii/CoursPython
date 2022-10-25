@@ -133,10 +133,22 @@ class Player(pygame.sprite.Sprite):
         self.direction.y = self.jump_speed
         self.jump_sound.play()
 
+    def jumpExplo(self):
+        self.direction.y = self.jump_speed
+        self.direction.x = self.jump_speed
+        self.jump_sound.play()
+
     def get_damage(self):
         if not self.invincible:
             self.hit_sound.play()
             self.change_health(-10)
+            self.invincible = True
+            self.hurt_time = pygame.time.get_ticks()
+
+    def get_damage2(self):
+        if not self.invincible:
+            self.hit_sound.play()
+            self.change_health(-30)
             self.invincible = True
             self.hurt_time = pygame.time.get_ticks()
 

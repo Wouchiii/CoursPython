@@ -12,6 +12,10 @@ class UI:
         self.bar_max_width = 152
         self.bar_height = 4
 
+        # KillCount
+        self.KillCount = pygame.image.load('../graphics/ui/pain.png').convert_alpha()
+        self.killCount_rect = self.KillCount.get_rect(topleft=(54, 70))
+
         # coins
         self.coin = pygame.image.load('../graphics/ui/coin.png').convert_alpha()
         self.coin_rect = self.coin.get_rect(topleft=(50, 61))
@@ -29,3 +33,9 @@ class UI:
         coin_amount_surf = self.font.render(str(amount), False, '#33323d')
         coin_amount_rect = coin_amount_surf.get_rect(midleft=(self.coin_rect.right + 4, self.coin_rect.centery))
         self.display_surface.blit(coin_amount_surf, coin_amount_rect)
+
+    def show_killCount(self, amount):
+        self.display_surface.blit(self.KillCount, self.killCount_rect)
+        killCount_amount_surf = self.font.render(str(amount), False, '#33323d')
+        killCount_amount_rect = killCount_amount_surf.get_rect(midleft=(self.killCount_rect.right + 4, self.killCount_rect.centery))
+        self.display_surface.blit(killCount_amount_surf, killCount_amount_rect)
